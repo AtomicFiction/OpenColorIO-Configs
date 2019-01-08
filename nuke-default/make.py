@@ -7,6 +7,7 @@ LD_LIBRARY_PATH=/net/soft_scratch/users/jeremys/git/ocio.js/build/src/core/
 """
 
 import math, os, sys
+import array
 import PyOpenColorIO as OCIO
 
 print "OCIO",OCIO.version
@@ -287,6 +288,45 @@ t = OCIO.FileTransform('redlog.spi1d', interpolation=OCIO.Constants.INTERP_LINEA
 cs.setTransform(t, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)
 config.addColorSpace(cs)
 
+
+# Lifted from aces_1.0.3 (`aces_ocio.colorspaces.red`)
+def log3g10_to_linear(code_value):
+    a = 0.224282
+    b = 155.975327
+    c = 0.01
+
+    normalized_log = code_value / 1023.0
+
+    mirror = 1.0
+    if normalized_log < 0.0:
+        mirror = -1.0
+        normalized_log = -normalized_log
+
+    linear = (pow(10.0, normalized_log / a) - 1) / b
+    linear = linear * mirror - c
+
+    return linear
+
+
+NUM_SAMPLES = 2**12
+RANGE = (0.0, 1.0)
+data = array.array('f', '\0' * NUM_SAMPLES * 4)
+for i in xrange(NUM_SAMPLES):
+    x = i/(NUM_SAMPLES-1.0)
+    x = Fit(x, 0.0, 1.0, RANGE[0], RANGE[1])
+    data[i] = log3g10_to_linear(1023 * x)
+
+WriteSPI1D('luts/redlog3g10.spi1d', RANGE[0], RANGE[1], data)
+
+cs = OCIO.ColorSpace(name='REDLog3G10')
+cs.setDescription("RED Log 3G10 Space")
+cs.setBitDepth(OCIO.Constants.BIT_DEPTH_F32)
+cs.setAllocation(OCIO.Constants.ALLOCATION_UNIFORM)
+cs.setAllocationVars([RANGE[0], RANGE[1]])
+
+t = OCIO.FileTransform('redlog3g10.spi1d', interpolation=OCIO.Constants.INTERP_LINEAR)
+cs.setTransform(t, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)
+config.addColorSpace(cs)
 
 
 ###############################################################################
