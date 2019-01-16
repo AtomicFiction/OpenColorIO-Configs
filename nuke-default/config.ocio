@@ -133,6 +133,18 @@ colorspaces:
     to_reference: !<FileTransform> {src: redlog.spi1d, interpolation: linear}
 
   - !<ColorSpace>
+    name: REDLog3G10
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      RED Log 3G10 Space
+    isdata: false
+    allocation: uniform
+    allocationvars: [0, 1]
+    to_reference: !<FileTransform> {src: redlog3g10.spi1d, interpolation: linear}
+
+  - !<ColorSpace>
     name: ViperLog
     family: ""
     equalitygroup: ""
